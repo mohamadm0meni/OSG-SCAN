@@ -36,12 +36,21 @@ check_dependencies() {
         apt-get update
         apt-get install -y python3 python3-pip
     fi
+    
+    # Ensure pip3 is installed
+    if ! command -v pip3 &> /dev/null; then
+        echo -e "${red}pip3 not found! Installing...${plain}"
+        apt-get install -y python3-pip
+    fi
 }
 
 download_project() {
     echo -e "${yellow}Downloading project files...${plain}"
     
-    # Create project directory
+    # Ensure clean directory
+    if [[ -d /usr/local/scanner ]]; then
+        rm -rf /usr/local/scanner
+    fi
     mkdir -p /usr/local/scanner
     cd /usr/local/scanner || exit 1
 
@@ -97,19 +106,6 @@ EOF
     chmod +x /usr/local/bin/osgscan
 }
 
-check_files() {
-    if [[ ! -f /usr/local/scanner/Dockerfile ]]; then
-        echo -e "${red}Dockerfile not found in /usr/local/scanner!${plain}"
-        ls -lah /usr/local/scanner
-        exit 1
-    fi
-    
-    if [[ ! -w /usr/local/bin ]]; then
-        echo -e "${red}Need sudo access to write to /usr/local/bin${plain}"
-        exit 1
-    fi
-}
-
 create_service() {
     cat > /etc/systemd/system/scanner.service << EOF
 [Unit]
@@ -136,8 +132,6 @@ main() {
     
     check_dependencies
     check_docker
-    download_project
-    check_files
     
     if download_project; then
         setup_docker

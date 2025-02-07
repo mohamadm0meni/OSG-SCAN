@@ -1,0 +1,161 @@
+scanner:
+  # Main scanner settings
+  max_threads: 15
+  connect_timeout: 2.0
+  read_timeout: 1.5
+  default_retries: 2
+  batch_size: 50
+
+timing_templates:
+  paranoid: # T0
+    scan_delay: 0.5
+    timeout: 5.0
+    max_retries: 3
+    max_rate: 10
+    parallel_hosts: 1
+
+  sneaky: # T1
+    scan_delay: 0.3
+    timeout: 4.0
+    max_retries: 3
+    max_rate: 20
+    parallel_hosts: 2
+
+  polite: # T2
+    scan_delay: 0.2
+    timeout: 3.0
+    max_retries: 2
+    max_rate: 50
+    parallel_hosts: 3
+
+  normal: # T3
+    scan_delay: 0.1
+    timeout: 2.0
+    max_retries: 2
+    max_rate: 100
+    parallel_hosts: 5
+
+  aggressive: # T4
+    scan_delay: 0.05
+    timeout: 1.5
+    max_retries: 1
+    max_rate: 300
+    parallel_hosts: 10
+
+  insane: # T5
+    scan_delay: 0.02
+    timeout: 1.0
+    max_retries: 1
+    max_rate: 1000
+    parallel_hosts: 15
+
+service_detection:
+  # Service detection settings
+  enabled: true
+  banner_timeout: 2.0
+  max_banner_length: 1024
+  service_probes_enabled: true
+  aggressive_service_detection: false
+  vuln_check: true  # Vulnerability check settings
+  no_banner: false  # Settings for disabling banner
+
+ports:
+  # Important ports to scan
+  web:
+    - 80
+    - 443
+    - 8080
+    - 8443
+
+  database:
+    - 3306 # MySQL
+    - 5432 # PostgreSQL
+    - 27017 # MongoDB
+    - 6379 # Redis
+    - 1521 # Oracle
+
+  mail:
+    - 25 # SMTP
+    - 110 # POP3
+    - 143 # IMAP
+    - 465 # SMTPS
+    - 993 # IMAPS
+    - 995 # POP3S
+
+  remote:
+    - 22 # SSH
+    - 23 # Telnet
+    - 3389 # RDP
+    - 5900 # VNC
+
+evasion_techniques:
+  # Stealth techniques
+  ip_fragmentation: true
+  random_source_port: true
+  custom_tcp_flags: true
+  random_packet_size: true
+  decoy_scan: true
+  fake_mac_address: true
+  ip_spoofing: true
+
+packet_manipulation:
+  # Packet manipulation settings
+  fragment_size: 8
+  ttl_manipulation: true
+  window_manipulation: true
+  urgent_pointer: false
+  tcp_options_manipulation: true
+
+reporting:
+  # Reporting settings
+  save_open_ports: true
+  save_closed_ports: false
+  save_filtered_ports: true
+  include_service_detection: true
+  include_banner_grab: true
+  include_vulnerability_check: true
+  report_formats:
+    - text
+    - json
+    - html
+    - xml
+
+logging:
+  # Logging settings
+  level: INFO
+  file_logging: true
+  console_logging: true
+  log_format: "%(asctime)s - %(levelname)s - %(message)s"
+  rotate_logs: true
+  max_log_size: 10485760 # 10MB
+  backup_count: 5
+
+alerts:
+  # Alert settings
+  alert_on_open_port: true
+  alert_on_new_service: true
+  alert_on_vulnerability: true
+  notification_methods:
+    - console
+    - file
+    # - email
+    # - webhook
+
+security:
+  # Security settings
+  validate_certificates: false
+  verify_ssl: false
+  minimum_key_length: 2048
+  allowed_cipher_suites:
+    - TLS_AES_256_GCM_SHA384
+    - TLS_CHACHA20_POLY1305_SHA256
+    - TLS_AES_128_GCM_SHA256
+
+advanced:
+  # Advanced settings
+  use_raw_sockets: true
+  enable_ipv6_scan: false
+  randomize_scan_order: true
+  adaptive_timing: true
+  auto_detect_firewall: true
+  bypass_firewall_techniques: true

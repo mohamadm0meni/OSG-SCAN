@@ -50,5 +50,21 @@ osgscan example.com -p 1-1000 --timing 3 --threads 20
 
 # Stealth scan with JSON output
 osgscan example.com --profile stealth --output json
+```
+
+## 🚀 Features
+
+> **Advanced and Stealthy Port Scanner**  
+
+✅ **Fast and advanced port scanning**  
+✅ **Service detection** for active services on the target  
+✅ **Vulnerability assessment** based on up-to-date databases  
+✅ **Bypasses IDS and IPS** for stealthy scans  
+✅ **Compatible with various systems**, tested on **MikroTik** and **Snort**  
+✅ **Output in JSON, text, and DB format** with full details including:  
+&nbsp;&nbsp;&nbsp;&nbsp;📌 **Time and host details**  
+&nbsp;&nbsp;&nbsp;&nbsp;📌 **Open, closed, and filtered ports**  
+&nbsp;&nbsp;&nbsp;&nbsp;📌 **Service identification and banner detection**  
+
 
 

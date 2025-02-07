@@ -43,7 +43,7 @@ download_project() {
     cd /usr/local/scanner
 
     # Clone repository
-    git clone https://github.com/yourusername/project.git .
+    git clone https://github.com/github.com/mohamadm0meni/OSG-SCAN.git .
     
     if [ $? -ne 0 ]; then
         echo -e "${red}Repository cloning failed${plain}"

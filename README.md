@@ -35,3 +35,20 @@ bash <(curl -Ls https://raw.githubusercontent.com/mohamadm0meni/OSG-SCAN/main/in
 | `--exclude-ports EXCLUDE_PORTS` | Exclude specific ports (e.g., `80,443,3306`) |
 | `--source-port SOURCE_PORT` | Specify source port |
 
+
+## 📌 Examples
+
+```yaml
+# Basic scan
+osgscan example.com
+
+# Scan ports 1-1000
+osgscan example.com -p 1-1000
+
+# Scan with timing profile 3 and 20 threads
+osgscan example.com -p 1-1000 --timing 3 --threads 20
+
+# Stealth scan with JSON output
+osgscan example.com --profile stealth --output json
+
+

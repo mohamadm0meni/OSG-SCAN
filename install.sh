@@ -53,6 +53,13 @@ download_project() {
         return 1
     fi
 
+    # Ensure Dockerfile exists
+    if [[ ! -f Dockerfile ]]; then
+        echo -e "${red}Dockerfile not found in cloned repository!${plain}"
+        ls -lah
+        exit 1
+    fi
+    
     # Install Python dependencies
     if [[ -f requirements.txt ]]; then
         pip3 install -r requirements.txt
@@ -76,12 +83,7 @@ setup_docker() {
     echo -e "${yellow}Setting up Docker environment...${plain}"
     
     # Build Docker image
-    if [[ -f Dockerfile ]]; then
-        docker build -t osgscan .
-    else
-        echo -e "${red}Dockerfile not found!${plain}"
-        exit 1
-    fi
+    docker build -t osgscan .
     
     # Create executable script
     cat > /usr/local/bin/osgscan << 'EOF'
@@ -96,8 +98,9 @@ EOF
 }
 
 check_files() {
-    if [[ ! -f Dockerfile ]]; then
-        echo -e "${red}Dockerfile not found${plain}"
+    if [[ ! -f /usr/local/scanner/Dockerfile ]]; then
+        echo -e "${red}Dockerfile not found in /usr/local/scanner!${plain}"
+        ls -lah /usr/local/scanner
         exit 1
     fi
     
@@ -133,6 +136,7 @@ main() {
     
     check_dependencies
     check_docker
+    download_project
     check_files
     
     if download_project; then

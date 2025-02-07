@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  A sophisticated network port scanner with comprehensive service detection, vulnerability assessment, and traffic analysis capabilities that are not detected by IDS and IPS. (Tested on Snort and MikroTik)
+Don't think about Nmap when OSG Scan is here.
 </p>
 
 <p align="center">

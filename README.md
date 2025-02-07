@@ -67,4 +67,10 @@ osgscan example.com --profile stealth --output json
 &nbsp;&nbsp;&nbsp;&nbsp;📌 **Service identification and banner detection**  
 
 
+---
+
+
+![carbon](https://github.com/user-attachments/assets/9ca715d0-47bb-425f-ad56-16b8495a8fcd)
+
+
 

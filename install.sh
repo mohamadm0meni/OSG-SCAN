@@ -54,10 +54,21 @@ download_project() {
     fi
 
     # Install Python dependencies
-    pip3 install -r requirements.txt
+    if [[ -f requirements.txt ]]; then
+        pip3 install -r requirements.txt
+    else
+        echo -e "${red}requirements.txt not found!${plain}"
+        return 1
+    fi
     
     # Set permissions
-    chmod +x main.py
+    if [[ -f main.py ]]; then
+        chmod +x main.py
+    else
+        echo -e "${red}main.py not found!${plain}"
+        return 1
+    fi
+    
     return 0
 }
 
@@ -65,7 +76,12 @@ setup_docker() {
     echo -e "${yellow}Setting up Docker environment...${plain}"
     
     # Build Docker image
-    docker build -t osgscan .
+    if [[ -f Dockerfile ]]; then
+        docker build -t osgscan .
+    else
+        echo -e "${red}Dockerfile not found!${plain}"
+        exit 1
+    fi
     
     # Create executable script
     cat > /usr/local/bin/osgscan << 'EOF'

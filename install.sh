@@ -49,6 +49,7 @@ download_project() {
     
     # Ensure clean directory
     if [[ -d /usr/local/scanner ]]; then
+        echo -e "${yellow}Cleaning existing directory...${plain}"
         rm -rf /usr/local/scanner
     fi
     mkdir -p /usr/local/scanner

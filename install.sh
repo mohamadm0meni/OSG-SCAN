@@ -7,7 +7,10 @@ yellow='\033[0;33m'
 plain='\033[0m'
 
 # Check root access
-[[ $EUID -ne 0 ]] && echo -e "${red}Error: ${plain} Please run with root privileges \n " && exit 1
+if [[ $EUID -ne 0 ]]; then
+    echo -e "${red}Error: ${plain} Please run with root privileges \n "
+    exit 1
+fi
 
 check_docker() {
     if ! command -v docker &> /dev/null; then
@@ -40,12 +43,12 @@ download_project() {
     
     # Create project directory
     mkdir -p /usr/local/scanner
-    cd /usr/local/scanner
+    cd /usr/local/scanner || exit 1
 
     # Clone repository
-    git clone https://github.com/github.com/mohamadm0meni/OSG-SCAN.git .
+    git clone https://github.com/mohamadm0meni/OSG-SCAN.git .
     
-    if [ $? -ne 0 ]; then
+    if [[ $? -ne 0 ]]; then
         echo -e "${red}Repository cloning failed${plain}"
         return 1
     fi
@@ -77,15 +80,15 @@ EOF
 }
 
 check_files() {
-    if [ ! -f Dockerfile ]; then
+    if [[ ! -f Dockerfile ]]; then
         echo -e "${red}Dockerfile not found${plain}"
         exit 1
     fi
     
-    if [ ! -w /usr/local/bin ]; then
+    if [[ ! -w /usr/local/bin ]]; then
         echo -e "${red}Need sudo access to write to /usr/local/bin${plain}"
         exit 1
-    }
+    fi
 }
 
 create_service() {

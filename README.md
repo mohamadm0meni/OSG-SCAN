@@ -72,5 +72,168 @@ osgscan example.com --profile stealth --output json
 
 ![carbon](https://github.com/user-attachments/assets/9ca715d0-47bb-425f-ad56-16b8495a8fcd)
 
+---
 
+# Class Diagram
+
+```mermaid
+classDiagram
+    %% Core Scanner and Config
+    class EnhancedScanner {
+        -target: str
+        -config: Config
+        -socket_manager: SocketManager
+        -advanced_socket_manager: AdvancedSocketManager
+        -service_detector: ServiceDetector
+        -banner_analyzer: BannerAnalyzer
+        -delay_manager: DelayManager
+        -port_batch_manager: PortBatchManager
+        -result_manager: ResultManager
+        -traffic_manager: TrafficManager
+        -web_tester: WebProtocolTester
+        -db_tester: DatabaseProtocolTester
+        -mail_tester: MailProtocolTester
+        -security_tester: WebSecurityTester
+        +scan(start_port: int, end_port: int): dict
+    }
+
+    class Config {
+        +EXCLUDED_PORTS: Set
+        +MAX_THREADS: int
+        +TIMEOUT: float
+        +SOURCE_PORT_RANGE: Tuple
+        +load_config(config_file: str)
+        +validate(): bool
+    }
+
+    %% Socket Management Group
+    class SocketManager {
+        -active_sockets: Dict
+        -socket_pool: List
+        +create_socket(ssl_wrap: bool): socket
+        +connect(host: str, port: int): Tuple
+    }
+
+    class AdvancedSocketManager {
+        -config: Config
+        -source_ports: List
+        +create_tcp_socket(): socket
+        +test_port(target: str, port: int): Dict
+    }
+
+    %% Service Detection Group
+    class ServiceDetector {
+        -target: str
+        -ssl_context: SSLContext
+        +detect_service(port: int): Dict
+        -_probe_service(sock: socket): Dict
+    }
+
+    class BannerAnalyzer {
+        -version_patterns: Dict
+        -security_patterns: Dict
+        +analyze_banner(banner: bytes): Dict
+        +scan_vulnerabilities(banner: bytes): List
+    }
+
+    %% Protocol Testing Group
+    class WebProtocolTester {
+        -timeout: float
+        -ssl_context: SSLContext
+        +test_web_port(target: str, port: int): Dict
+        +scan_ports(target: str): List
+    }
+
+    class DatabaseProtocolTester {
+        -config: Config
+        +test_mysql(sock: socket): Dict
+        +test_postgresql(sock: socket): Dict
+    }
+
+    class MailProtocolTester {
+        -service_patterns: Dict
+        +test_smtp(sock: socket): Dict
+        +test_pop3(sock: socket): Dict
+    }
+
+    %% Management Group
+    class DelayManager {
+        -min_delay: float
+        -max_delay: float
+        +get_scan_delay(port: int): float
+        +wait_before_scan(port: int)
+    }
+
+    class PortBatchManager {
+        -service_ports: Dict
+        -common_ports: Set
+        +create_batches(start_port: int): List
+        +update_stats(port: int): void
+    }
+
+    class ResultManager {
+        -target: str
+        -results_dir: str
+        +save_results(scan_results: Dict)
+        -_generate_report(results: Dict)
+    }
+
+    class TrafficManager {
+        -max_rate: int
+        -stats: TrafficStats
+        +analyze_traffic_patterns(): Dict
+        -_identify_patterns(): Dict
+    }
+
+    %% Port and Packet Handling Group
+    class PortHandlers {
+        -target: str
+        -packet_manager: PacketManipulation
+        +handle_port(port: int): Dict
+        +handle_http(sock: socket): Dict
+    }
+
+    class PacketManipulation {
+        -tcp_flags: Dict
+        -source_ports: List
+        +create_packet(src_ip: str): bytes
+        +fragment_packet(packet: bytes): List
+    }
+
+    %% Security Testing Group
+    class WebSecurityTester {
+        -protocol_tester: WebProtocolTester
+        +scan(target: str): Dict
+        -_test_vulnerabilities(): List
+    }
+
+    %% Core Relationships
+    EnhancedScanner *-- Config
+    EnhancedScanner *-- SocketManager
+    EnhancedScanner *-- AdvancedSocketManager
+    EnhancedScanner *-- ServiceDetector
+    EnhancedScanner *-- BannerAnalyzer
+    EnhancedScanner *-- DelayManager
+    EnhancedScanner *-- PortBatchManager
+    EnhancedScanner *-- ResultManager
+    EnhancedScanner *-- TrafficManager
+    EnhancedScanner *-- WebProtocolTester
+    EnhancedScanner *-- DatabaseProtocolTester
+    EnhancedScanner *-- MailProtocolTester
+    EnhancedScanner *-- WebSecurityTester
+
+    %% Dependency Relationships
+    AdvancedSocketManager --> SocketManager
+    AdvancedSocketManager --> Config
+    ServiceDetector --> Config
+    ServiceDetector --> SocketManager
+    BannerAnalyzer --> Config
+    WebProtocolTester --> SocketManager
+    DatabaseProtocolTester --> SocketManager
+    MailProtocolTester --> SocketManager
+    DelayManager --> Config
+    PortBatchManager --> Config
+    PortHandlers --> PacketManipulation
+    WebSecurityTester --> WebProtocolTester
+    ```
 

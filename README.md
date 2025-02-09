@@ -1,4 +1,6 @@
 
+[English](/README.md) | [فارسی](/README.fa_IR.md)
+
 <p align="center">
   <strong><span style="font-size: 1000px;">OSG-SCAN</span></strong>
 </p>

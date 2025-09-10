@@ -1,0 +1,164 @@
+# Git and version control
+.git
+.gitignore
+.gitattributes
+.github/
+
+# Documentation and readme files
+README.md
+CHANGELOG.md
+LICENSE
+CONTRIBUTING.md
+*.md
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.vim/
+.emacs.d/
+
+# Python cache and build files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.virtualenv/
+
+# Testing and coverage
+.tox/
+.coverage
+.pytest_cache/
+htmlcov/
+.coverage.*
+coverage.xml
+*.cover
+.hypothesis/
+.nox/
+nosetests.xml
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Logs and temporary files
+*.log
+logs/
+temp/
+tmp/
+*.tmp
+*.temp
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Scan results and output (don't include in image)
+scan_results/
+results/
+output/
+reports/
+data/
+
+# Local configuration overrides
+config.local.json
+settings.local.json
+local_config.py
+
+# Node modules (if any)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Docker files (no need to copy into image)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# CI/CD files
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+.jenkins/
+azure-pipelines.yml
+
+# Large files that shouldn't be in image
+*.iso
+*.tar.gz
+*.zip
+*.rar
+*.7z
+*.bz2
+*.xz
+
+# Backup files
+*.bak
+*.backup
+*.old
+*~
+
+# Development tools
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Profiling data
+.prof
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Certificates and keys (security)
+*.pem
+*.key
+*.crt
+*.cert
+*.p12
+*.pfx
+
+# Cache directories
+.cache/
+.npm/
+.yarn/

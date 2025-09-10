@@ -370,7 +370,7 @@ show-config:
 	@echo "  ⚙️ Service file: /etc/systemd/system/scanner.service"
 	@echo ""
 	@echo -e "$(GREEN)Configuration:$(NC)"
-	@echo "  📄 Config file: $(INSTALL_PATH)/config.json"
+	@echo "  📄 Config file: $(INSTALL_PATH)/config.py"
 	@echo "  📊 Results directory: $(INSTALL_PATH)/scan_results"
 	@echo "  📋 Logs directory: $(INSTALL_PATH)/logs"
 	@echo ""

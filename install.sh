@@ -212,20 +212,30 @@ setup_project() {
 
 # Install Python dependencies
 install_python_deps() {
-    echo -e "\n${yellow}🐍 Installing Python dependencies...${plain}"
+    echo -e "\n${yellow}Installing Python dependencies...${plain}"
     
     cd /usr/local/scanner || exit 1
     
+    # Install nmap system package first
+    echo -e "${cyan}Installing system nmap...${plain}"
+    if command -v apt-get &> /dev/null; then
+        apt-get install -y nmap
+    elif command -v yum &> /dev/null; then
+        yum install -y nmap
+    elif command -v dnf &> /dev/null; then
+        dnf install -y nmap
+    fi
+    
     if [[ -f requirements.txt ]]; then
-        echo -e "${cyan}📦 Installing from requirements.txt...${plain}"
+        echo -e "${cyan}Installing from requirements.txt...${plain}"
         
         # Try to install all at once first
         if pip3 install --no-cache-dir -r requirements.txt; then
-            echo -e "${green}✓ All Python packages installed successfully${plain}"
+            echo -e "${green}All Python packages installed successfully${plain}"
         else
-            echo -e "${yellow}⚠ Some packages failed, trying individual installation...${plain}"
+            echo -e "${yellow}Some packages failed, trying individual installation...${plain}"
             
-            # Install packages individually
+            # Install packages individually with better error handling
             while IFS= read -r requirement; do
                 # Skip empty lines and comments
                 [[ -z "$requirement" || "$requirement" =~ ^[[:space:]]*# ]] && continue
@@ -234,30 +244,41 @@ install_python_deps() {
                 package=$(echo "$requirement" | tr -d '\r\n' | sed 's/[[:space:]]*$//')
                 [[ -z "$package" ]] && continue
                 
-                echo -e "${cyan}  📦 Installing: $package${plain}"
+                echo -e "${cyan}  Installing: $package${plain}"
                 if pip3 install --no-cache-dir "$package"; then
-                    echo -e "${green}    ✓ $package installed${plain}"
+                    echo -e "${green}    $package installed${plain}"
                 else
-                    echo -e "${yellow}    ⚠ Failed to install $package (continuing...)${plain}"
+                    echo -e "${yellow}    Failed to install $package (continuing...)${plain}"
                 fi
             done < requirements.txt
         fi
         
+        # Handle python-nmap separately if needed
+        echo -e "${cyan}Checking nmap Python binding...${plain}"
+        if ! python3 -c "import nmap" 2>/dev/null; then
+            echo -e "${yellow}Installing alternative nmap binding...${plain}"
+            pip3 install --no-cache-dir python3-nmap || \
+            pip3 install --no-cache-dir python-libnmap || \
+            echo -e "${yellow}nmap Python binding failed (scanner will use subprocess)${plain}"
+        else
+            echo -e "${green}nmap Python binding is working${plain}"
+        fi
+        
         # Special handling for mysqlclient
-        echo -e "${cyan}🗄️ Checking MySQL client...${plain}"
+        echo -e "${cyan}Checking MySQL client...${plain}"
         if ! python3 -c "import MySQLdb" 2>/dev/null; then
-            echo -e "${yellow}📦 Installing mysqlclient separately...${plain}"
+            echo -e "${yellow}Installing mysqlclient separately...${plain}"
             if pip3 install --no-cache-dir mysqlclient; then
-                echo -e "${green}✓ mysqlclient installed${plain}"
+                echo -e "${green}mysqlclient installed${plain}"
             else
-                echo -e "${yellow}⚠ mysqlclient failed (MySQL features will be limited)${plain}"
+                echo -e "${yellow}mysqlclient failed (MySQL features will be limited)${plain}"
             fi
         else
-            echo -e "${green}✓ MySQL client is working${plain}"
+            echo -e "${green}MySQL client is working${plain}"
         fi
         
     else
-        echo -e "${red}❌ requirements.txt not found${plain}"
+        echo -e "${red}requirements.txt not found${plain}"
         exit 1
     fi
 }

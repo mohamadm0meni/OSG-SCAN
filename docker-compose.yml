@@ -1,0 +1,250 @@
+version: '3.8'
+
+# OSG-SCAN Docker Compose Configuration
+# Provides multiple deployment options for different use cases
+
+services:
+  # Main OSG-SCAN service
+  osgscan:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - BUILD_DATE=${BUILD_DATE:-2025-09-11}
+        - VCS_REF=${VCS_REF:-main}
+    image: osgscan:latest
+    container_name: osgscan-main
+    hostname: osgscan
+    restart: unless-stopped
+    
+    # Network configuration for host scanning
+    network_mode: host
+    
+    # Volume mounts for persistent data
+    volumes:
+      # Results and logs
+      - ./scan_results:/app/scan_results
+      - ./logs:/app/logs
+      # Configuration
+      - ./config:/app/config
+      # Data input directory
+      - ./data:/app/data
+      # Temporary files
+      - osgscan_temp:/app/temp
+    
+    # Environment variables
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SCANNER_LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - SCANNER_CONFIG_PATH=/app/config/config.json
+      - SCANNER_RESULTS_PATH=/app/scan_results
+      - SCANNER_MODE=${SCANNER_MODE:-standalone}
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: ${MEMORY_LIMIT:-1024M}
+          cpus: '${CPU_LIMIT:-2.0}'
+        reservations:
+          memory: ${MEMORY_RESERVATION:-512M}
+          cpus: '${CPU_RESERVATION:-1.0}'
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import main; print('OK')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    
+    # Security
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    
+    # Default command (can be overridden)
+    command: ["python3", "main.py", "--help"]
+    
+    # Labels for management
+    labels:
+      - "com.osgscan.service=main"
+      - "com.osgscan.version=2.0"
+      - "com.docker.compose.project=osgscan"
+
+  # Optional: Database service for storing scan results
+  database:
+    image: mysql:8.0
+    container_name: osgscan-database
+    restart: unless-stopped
+    
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-osgscan_root_2025}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-osgscan}
+      MYSQL_USER: ${MYSQL_USER:-osgscan_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-osgscan_pass_2025}
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+    
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init:/docker-entrypoint-initdb.d
+      - ./database/config:/etc/mysql/conf.d
+    
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    
+    # Only start if database profile is enabled
+    profiles:
+      - database
+      - full
+
+  # Optional: Web interface service (for future web UI)
+  web:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: osgscan:latest
+    container_name: osgscan-web
+    restart: unless-stopped
+    
+    ports:
+      - "${WEB_PORT:-8080}:8080"
+      - "${WEB_SSL_PORT:-8443}:8443"
+    
+    volumes:
+      - ./scan_results:/app/scan_results:ro
+      - ./logs:/app/logs:ro
+      - ./web_config:/app/web_config
+    
+    environment:
+      - SCANNER_MODE=web
+      - WEB_PORT=8080
+      - WEB_SSL_PORT=8443
+      - DATABASE_URL=mysql://osgscan_user:osgscan_pass_2025@database:3306/osgscan
+    
+    command: ["python3", "main.py", "--web-interface", "--port", "8080"]
+    
+    depends_on:
+      database:
+        condition: service_healthy
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    
+    # Only start if web profile is enabled
+    profiles:
+      - web
+      - full
+
+  # Optional: Redis for caching and job queues
+  redis:
+    image: redis:7-alpine
+    container_name: osgscan-redis
+    restart: unless-stopped
+    
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-osgscan_redis_2025}
+    
+    volumes:
+      - redis_data:/data
+    
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    
+    # Only start if cache profile is enabled
+    profiles:
+      - cache
+      - full
+
+  # Optional: Nginx reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: osgscan-nginx
+    restart: unless-stopped
+    
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
+    
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./logs/nginx:/var/log/nginx
+    
+    depends_on:
+      - web
+    
+    # Only start if proxy profile is enabled
+    profiles:
+      - proxy
+      - full
+
+# Named volumes for persistent data
+volumes:
+  mysql_data:
+    driver: local
+    name: osgscan_mysql_data
+  
+  redis_data:
+    driver: local
+    name: osgscan_redis_data
+  
+  osgscan_temp:
+    driver: local
+    name: osgscan_temp
+
+# Networks (optional, using host network for main scanning)
+networks:
+  default:
+    name: osgscan-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# Configuration for different environments
+# Usage examples:
+#
+# Basic scan:
+# docker-compose run --rm osgscan python3 main.py example.com -p 1-1000
+#
+# With database:
+# docker-compose --profile database up -d
+#
+# Full stack (web + database + cache):
+# docker-compose --profile full up -d
+#
+# Environment-specific:
+# docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d

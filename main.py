@@ -12,39 +12,46 @@ import ipaddress
 import signal
 import socket
 
-# Core scanner components
+# Import configuration - تغییر از Config به config.py
+try:
+    import config
+except ImportError:
+    print("Error: config.py not found. Please ensure it's in the same directory.")
+    sys.exit(1)
 
+# Handle nmap import gracefully
+try:
+    import nmap
+    NMAP_AVAILABLE = True
+except ImportError:
+    NMAP_AVAILABLE = False
+    print("Warning: python-nmap not available, using subprocess method")
+
+# Core scanner components
 from result_manager import ResultManager
-from Config import Config
+# حذف خط زیر چون از config.py استفاده می‌کنیم
+# from Config import Config
 from delay_manager import DelayManager
 
 # Service detection and testing
-
 from ServiceDetector import ServiceDetector
 from WebProtocolTester import WebProtocolTester
 
 # Connection handling
-
 from AdvancedSocketManager import AdvancedSocketManager
 from socket_manager import SocketManager
 
 # Protocol testers
-
 from BannerAnalyzer import BannerAnalyzer
 from DatabaseProtocolTester import DatabaseProtocolTester
 from MailProtocolTester import MailProtocolTester
 
 # Traffic management
-
 from traffic_manager import TrafficManager
 
 # Batch and port management
-
 from port_batch_manager import PortBatchManager
 from PortHandlers import PortHandlers
-
-
-
 
 
 class EnhancedScanner:
@@ -52,7 +59,23 @@ class EnhancedScanner:
 
     def __init__(self, target: str, config_file: Optional[str] = None):
         self.target = target
-        self.config = Config(config_file)
+        
+        # Load configuration - استفاده از config.py به جای Config class
+        if config_file and os.path.exists(config_file):
+            try:
+                import importlib.util
+                spec = importlib.util.spec_from_file_location("custom_config", config_file)
+                custom_config = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(custom_config)
+                self.config = custom_config
+                print(f"Loaded custom configuration from {config_file}")
+            except Exception as e:
+                print(f"Warning: Could not load custom config {config_file}: {e}")
+                print("Using default configuration...")
+                self.config = config
+        else:
+            self.config = config
+            
         self.stop_scan = False
         self.scan_paused = threading.Event()
         
@@ -66,7 +89,6 @@ class EnhancedScanner:
         
         # Initialize service detectors and testers
         self.service_detector = ServiceDetector(target)
-
         self.web_tester = WebProtocolTester()
         
         # Initialize protocol testers
@@ -75,18 +97,18 @@ class EnhancedScanner:
         self.mail_tester = MailProtocolTester()
         
         # Initialize traffic management
-
         self.traffic_manager = TrafficManager()
         
         # Initialize port management
         self.port_batch_manager = PortBatchManager()
         self.port_handlers = PortHandlers(target)
         
-
         # Thread safety
         self.lock = threading.Lock()
-        #self.active_threads = set()
-        self.thread_pool = ThreadPoolExecutor(max_workers=self.config.MAX_THREADS)
+        
+        # استفاده از config.py برای MAX_THREADS
+        max_threads = getattr(self.config, 'ScannerConfig', config.ScannerConfig).MAX_THREADS
+        self.thread_pool = ThreadPoolExecutor(max_workers=max_threads)
 
         # Stats tracking
         self.stats = {
@@ -106,13 +128,57 @@ class EnhancedScanner:
         self._setup_logging()
         self._setup_signal_handlers()
 
+    def get_config_value(self, section: str, key: str, default: Any = None) -> Any:
+        """Helper function to get configuration values safely from config.py"""
+        try:
+            if hasattr(self.config, section):
+                section_obj = getattr(self.config, section)
+                if hasattr(section_obj, key):
+                    return getattr(section_obj, key)
+            return default
+        except Exception:
+            return default
+
+    def get_threads(self) -> int:
+        """Get configured thread count."""
+        return self.get_config_value('ScannerConfig', 'DEFAULT_THREADS', 50)
+
+    def get_timeout(self) -> int:
+        """Get configured timeout value."""
+        return self.get_config_value('ScannerConfig', 'DEFAULT_TIMEOUT', 3)
+
+    def get_timing_profile(self, profile_name: str) -> Dict[str, Any]:
+        """Get timing profile by name."""
+        if hasattr(self.config, 'TIMING_PROFILES'):
+            # اگر profile_name یک عدد است، از آن استفاده کن
+            if isinstance(profile_name, int) or profile_name.isdigit():
+                profile_id = int(profile_name)
+                return self.config.TIMING_PROFILES.get(profile_id, self.config.TIMING_PROFILES[3])
+            
+            # اگر profile_name یک string است، آن را پیدا کن
+            for profile_id, profile_data in self.config.TIMING_PROFILES.items():
+                if profile_data.get('name') == profile_name:
+                    return profile_data
+            
+            # اگر پیدا نشد، default را برگردان
+            return self.config.TIMING_PROFILES[3]
+        
+        # fallback به default values
+        return {
+            'name': 'normal',
+            'delay': 0.5,
+            'timeout': 4,
+            'threads': 25,
+            'randomize_delay': False
+        }
+
     def _setup_logging(self):
         """Setup advanced logging system"""
         log_format = '%(asctime)s - %(levelname)s - %(message)s'
         date_format = '%Y-%m-%d %H:%M:%S'
 
-        # Define the log directory
-        log_dir = "scan_logs"  
+        # استفاده از config.py برای log directory
+        log_dir = self.get_config_value('OutputConfig', 'LOG_DIRECTORY', "scan_logs")
         if not os.path.exists(log_dir):  
             os.makedirs(log_dir)
 
@@ -148,7 +214,6 @@ class EnhancedScanner:
         # Test log to check if logging is working
         self.logger.debug("Logging setup complete. This is a debug message.")  # Log a test message
 
-
     def _setup_signal_handlers(self):
         """Set up signal handlers for interrupt management"""
         signal.signal(signal.SIGINT, self._handle_interrupt)
@@ -177,8 +242,8 @@ class EnhancedScanner:
             if not self._validate_ports(start_port, end_port):
                 raise ValueError("Invalid port range")
 
-            # Apply timing profile
-            timing = self.config.get_timing(timing_profile)
+            # Apply timing profile - استفاده از helper method جدید
+            timing = self.get_timing_profile(timing_profile)
             self.delay_manager.set_scan_profile(timing_profile)
 
             self.logger.info(f"Starting scan of {self.target} with profile {timing_profile}")
@@ -253,7 +318,10 @@ class EnhancedScanner:
         """Scan a batch of ports"""
         futures = []
 
-        with ThreadPoolExecutor(max_workers=self.config.MAX_THREADS) as executor:
+        # استفاده از config.py برای MAX_THREADS
+        max_threads = self.get_config_value('ScannerConfig', 'MAX_THREADS', 50)
+        
+        with ThreadPoolExecutor(max_workers=max_threads) as executor:
             for port in ports:
                 if self.stop_scan:
                     break
@@ -421,7 +489,7 @@ def main():
     )
     parser.add_argument(
         '--config',
-        help='Configuration file path'
+        help='Configuration file path (custom config.py file)'
     )
     parser.add_argument(
         '--debug',
@@ -496,7 +564,6 @@ def main():
                 print("Error: Invalid port. Port must be between 1 and 65535.")
                 sys.exit(1)
 
-
         # Process excluded ports
         excluded_ports = set()
         if args.exclude_ports:
@@ -520,14 +587,21 @@ def main():
         # Create and configure scanner
         scanner = EnhancedScanner(target, args.config)
         
-        # Apply additional settings
-        if args.source_port:
-            scanner.config.source_port = args.source_port
-        if args.interface:
-            scanner.config.interface = args.interface
-        scanner.config.service_detection = args.service_detection
-        scanner.config.vuln_check = args.vuln_check
-        scanner.config.no_banner = args.no_banner
+        # Apply additional settings - استفاده از attributes موجود
+        if hasattr(scanner, 'config'):
+            if args.source_port:
+                # اگر config یک dynamic object است
+                if hasattr(scanner.config, '__dict__'):
+                    scanner.config.source_port = args.source_port
+            if args.interface:
+                if hasattr(scanner.config, '__dict__'):
+                    scanner.config.interface = args.interface
+            
+            # Apply scanner-specific settings
+            if hasattr(scanner.config, '__dict__'):
+                scanner.config.service_detection = args.service_detection
+                scanner.config.vuln_check = args.vuln_check
+                scanner.config.no_banner = args.no_banner
 
         print(f"\nStarting scan of {args.target}")
         print(f"Port range: {start_port}-{end_port}")
@@ -608,4 +682,4 @@ def main():
         sys.exit(1)
 
 if __name__ == '__main__':
-    main()    
+    main()

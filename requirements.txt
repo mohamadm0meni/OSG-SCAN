@@ -2,7 +2,7 @@
 scapy>=2.5.0
 netaddr>=0.8.0
 netifaces>=0.11.0
-python-nmap>=0.7.1
+# python-nmap>=0.7.1  # این خط را comment کردیم
 cryptography>=41.0.1
 pyOpenSSL>=23.2.0
 paramiko>=3.3.1
@@ -10,8 +10,8 @@ dnspython>=2.4.2
 pycryptodome>=3.18.0
 
 # Database
-mysqlclient>=2.2.0
-psycopg2-binary>=2.9.7
+# mysqlclient>=2.2.0  # این خط را comment کردیم
+# psycopg2-binary>=2.9.7  # این خط را comment کردیم
 pymongo>=4.4.1
 redis>=4.6.0
 
@@ -23,7 +23,6 @@ lxml>=4.9.3
 httpx>=0.24.1
 
 # Async and Concurrency
-asyncio>=3.4.3
 aiofiles>=23.1.0
 gevent>=23.7.0
 
@@ -52,7 +51,7 @@ prompt-toolkit>=3.0.39
 tqdm>=4.65.0
 
 # Performance
-cython>=3.0.2
+# cython>=3.0.2  # این خط را comment کردیم
 ujson>=5.8.0
 msgpack>=1.0.5
 

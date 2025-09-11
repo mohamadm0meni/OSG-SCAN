@@ -23,7 +23,7 @@ show_banner() {
     echo "  ╚═════╝ ╚══════╝ ╚═════╝       ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═══╝"
     echo -e "${plain}"
     echo -e "${yellow}${bold}          Advanced Port Scanner & Network Security Tool${plain}"
-    echo -e "${green}                      Don't think about Nmap when OSG Scan is here${plain}"
+    echo -e "${green}                  Don't think about Nmap when OSG Scan is here${plain}"
     echo ""
     echo -e "${blue}═══════════════════════════════════════════════════════════════════════${plain}"
     echo ""
@@ -308,6 +308,7 @@ configuration() {
 }
 
 # Uninstall function
+# Uninstall function
 uninstall_osgscan() {
     clear
     show_banner
@@ -328,7 +329,31 @@ uninstall_osgscan() {
     if [[ "$confirm" == "YES" ]]; then
         echo ""
         echo -e "${red}Starting uninstall process...${plain}"
-        bash <(curl -Ls https://raw.githubusercontent.com/mohamadm0meni/OSG-SCAN/main/uninstall.sh)
+        
+        # اجرای uninstall مستقیم به جای دانلود
+        if [[ -f "/usr/local/scanner/uninstall.sh" ]]; then
+            bash /usr/local/scanner/uninstall.sh
+        else
+            # Uninstall مستقیم
+            echo -e "${yellow}Stopping scanner service...${plain}"
+            systemctl stop scanner 2>/dev/null || true
+            systemctl disable scanner 2>/dev/null || true
+            
+            echo -e "${yellow}Removing service file...${plain}"
+            rm -f /etc/systemd/system/scanner.service
+            systemctl daemon-reload
+            
+            echo -e "${yellow}Removing osgscan command...${plain}"
+            rm -f /usr/local/bin/osgscan
+            
+            echo -e "${yellow}Removing scanner directory...${plain}"
+            rm -rf /usr/local/scanner
+            
+            echo -e "${yellow}Removing Docker image...${plain}"
+            docker rmi osgscan 2>/dev/null || true
+            
+            echo -e "${green}✅ OSG-SCAN has been completely removed!${plain}"
+        fi
         exit 0
     else
         echo -e "${yellow}Uninstall cancelled.${plain}"

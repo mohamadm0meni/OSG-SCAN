@@ -18,10 +18,15 @@ Don't think about Nmap when OSG Scan is here.
 ```
 bash <(curl -Ls https://raw.githubusercontent.com/mohamadm0meni/OSG-SCAN/main/install.sh)
 ```
-## Launch Interactive Menu
+## Launch Interactive Menu (after installation)
 
 ```
 osgscan
+```
+## Direct Scan (without menu)
+
+```
+osgscan target.com -p 1-65535
 ```
 
 ### **Optional Arguments:**

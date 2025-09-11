@@ -13,10 +13,15 @@ Don't think about Nmap when OSG Scan is here.
   <img src="https://github.com/user-attachments/assets/45c09394-525c-4ba3-83b8-1a7d10a10d04" alt="OSG SCAN"/>
 </p>
 
-## Install & Upgrade
+## Install & Upgrade & Uninstall
 
 ```
 bash <(curl -Ls https://raw.githubusercontent.com/mohamadm0meni/OSG-SCAN/main/install.sh)
+```
+## Launch Interactive Menu
+
+```
+osgscan
 ```
 
 ### **Optional Arguments:**

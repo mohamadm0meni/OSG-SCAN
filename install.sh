@@ -95,12 +95,19 @@ setup_docker() {
     # Build Docker image
     docker build -t osgscan .
     
-    # Create executable script
+    # Copy interactive menu script
+    cp osgscan-menu.sh /usr/local/scanner/osgscan-menu.sh
+    chmod +x /usr/local/scanner/osgscan-menu.sh
+    
+    # Create executable script with menu support
     cat > /usr/local/bin/osgscan << 'EOF'
 #!/bin/bash
+
+# If no arguments provided, show interactive menu
 if [ $# -eq 0 ]; then
-    docker run --rm --network host osgscan --help
+    bash /usr/local/scanner/osgscan-menu.sh
 else
+    # If arguments provided, run direct scan
     docker run --rm --network host osgscan "$@"
 fi
 EOF

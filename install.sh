@@ -98,10 +98,11 @@ setup_docker() {
     # Create executable script
     cat > /usr/local/bin/osgscan << 'EOF'
 #!/bin/bash
-docker run --rm \
-    --network host \
-    -v $(pwd):/app/data \
-    osgscan "$@"
+if [ $# -eq 0 ]; then
+    docker run --rm --network host osgscan --help
+else
+    docker run --rm --network host osgscan "$@"
+fi
 EOF
 
     chmod +x /usr/local/bin/osgscan
